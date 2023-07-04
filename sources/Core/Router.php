@@ -13,7 +13,8 @@ final class Router
 {
     private array $routes;
 
-    final public function __construct(private Request $request, private JsonResponse $response) {
+    final public function __construct(private Request $request, private JsonResponse $response)
+    {
         $this->routes = [];
     }
 
