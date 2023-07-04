@@ -7,7 +7,9 @@ use App\Core\Request;
 
 final class AuthenticationService
 {
-    public function __construct(private UserRepository $userRepository, private Request $request) { }
+    public function __construct(private UserRepository $userRepository, private Request $request)
+    {
+    }
 
     final public function authenticated(): bool
     {
@@ -34,7 +36,7 @@ final class AuthenticationService
             return false;
         }
 
-        $user = $this->userRepository->getUserByToken($authorizationToken);
+        $user = $this->userRepository->getUserByAuthenticationToken($authorizationToken);
 
         if (!$user) {
             return false;
