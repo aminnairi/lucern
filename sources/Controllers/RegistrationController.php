@@ -8,10 +8,14 @@ use App\Exceptions\BadRequestException;
 use App\Exceptions\InternalServerErrorException;
 use App\Models\User;
 use App\Repositories\UserRepository;
+use App\Services\EmailService;
+use App\Services\TokenService;
 
 final class RegistrationController
 {
-    final public function __construct(private Request $request, private UserRepository $userRepository, private JsonResponse $response) { }
+    final public function __construct(private Request $request, private UserRepository $userRepository, private JsonResponse $response, private TokenService $tokenService, private EmailService $emailService)
+    {
+    }
 
     final public function post(): JsonResponse
     {
@@ -30,10 +34,24 @@ final class RegistrationController
             ->withEmail($body["email"])
             ->withPassword($body["password"]);
 
-        $success = $this->userRepository->createUser($user);
+        $confirmationToken = $this->tokenService->createToken();
+
+        $success = $this->userRepository->createUser($user, $confirmationToken);
 
         if (!$success) {
             throw new InternalServerErrorException("Failed to register user");
+        }
+
+        $success = $this
+            ->emailService
+            ->withReceiver($user->email)
+            ->withSender("Your Friendly App")
+            ->withSubject("Confirm registration")
+            ->withBody("You can confirm you registration using this token: $confirmationToken")
+            ->send();
+
+        if (!$success) {
+            throw new InternalServerErrorException("Failed to send the confirmation email for email {$user->email}");
         }
 
         return $this
