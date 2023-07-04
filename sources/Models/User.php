@@ -7,6 +7,7 @@ final class User
     public int $id;
     public string $email;
     public string $password;
+    public string | null $confirmation_token;
 
     final public function withId(int $id): self
     {
@@ -47,5 +48,10 @@ final class User
     final public function isValidPassword(string $password): bool
     {
         return password_verify($password, $this->password);
+    }
+
+    final public function isConfirmed(): bool
+    {
+        return $this->confirmation_token === null;
     }
 }
