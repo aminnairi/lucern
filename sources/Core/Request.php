@@ -14,9 +14,12 @@ final class Request
 
     final public function __construct()
     {
+        $requestUri = $_SERVER["REQUEST_URI"];
+        $parsedRequestUri = parse_url($requestUri);
+
         $this->headers = getallheaders();
         $this->method = $_SERVER["REQUEST_METHOD"];
-        $this->uri = $_SERVER["REQUEST_URI"];
+        $this->uri = $parsedRequestUri["path"];
         $this->route = "";
         $this->body = json_decode(file_get_contents("php://input"), true) ?? [];
     }
@@ -109,5 +112,10 @@ final class Request
         }
 
         throw new UnprocessableEntityException($errors);
+    }
+
+    final public function query(string $key): string | null
+    {
+        return $_GET[$key] ?? null;
     }
 }
