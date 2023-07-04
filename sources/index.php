@@ -2,6 +2,10 @@
 
 namespace App;
 
+ini_set("display_errors", "1");
+ini_set("display_startup_errors", "1");
+error_reporting(E_ALL);
+
 require_once __DIR__ . "/autoload.php";
 
 use App\Core\Router;
@@ -10,6 +14,7 @@ use App\Controllers\ArticlesController;
 use App\Controllers\RegistrationController;
 use App\Controllers\LoginController;
 use App\Controllers\LogoutController;
+use App\Controllers\RegistrationConfirmationController;
 
 // This is where we instanciate the router and all of its dependencies recursively
 
@@ -18,6 +23,7 @@ $router = Dependency::fromClassName(Router::class);
 // This is where you can define your routes
 
 $router->post("/registration", RegistrationController::class, "post");
+$router->post("/registration/confirmation", RegistrationConfirmationController::class, "post");
 $router->post("/login", LoginController::class, "post");
 $router->post("/logout", LogoutController::class, "post");
 $router->get("/articles", ArticlesController::class, "get");
