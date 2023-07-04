@@ -8,15 +8,16 @@ use PDO;
 
 final class UserRepository extends Repository
 {
-    final public function createUser(User $user): bool
+    final public function createUser(User $user, string $confirmationToken): bool
     {
         $databaseConnection = $this->getDatabaseConnection();
 
-        $createUserQuery = $databaseConnection->prepare("INSERT INTO users(email, password) VALUES(:email, :password)");
+        $createUserQuery = $databaseConnection->prepare("INSERT INTO users(email, password, confirmation_token) VALUES(:email, :password, :confirmation_token)");
 
         $success = $createUserQuery->execute([
-            "email" => htmlspecialchars($user->getEmail()),
-            "password" => $user->getPassword()
+            "email" => htmlspecialchars(strtolower(trim($user->getEmail()))),
+            "password" => $user->getPassword(),
+            "confirmation_token" => $confirmationToken
         ]);
 
         return $success;
@@ -63,28 +64,28 @@ final class UserRepository extends Repository
         return null;
     }
 
-    final public function setUserTokenById(string $id, string $token): bool
+    final public function setUserAuthenticationTokenById(string $id, string $token): bool
     {
         $databaseConnection = $this->getDatabaseConnection();
 
-        $setUserTokenByIdQuery = $databaseConnection->prepare("UPDATE users SET token = :token WHERE id = :id");
+        $setUserTokenByIdQuery = $databaseConnection->prepare("UPDATE users SET authentication_token = :authentication_token WHERE id = :id");
 
         $success = $setUserTokenByIdQuery->execute([
             "id" => $id,
-            "token" => $token
+            "authentication_token" => $token
         ]);
 
         return $success;
     }
 
-    final public function getUserByToken(string $token): User | null
+    final public function getUserByAuthenticationToken(string $token): User | null
     {
         $databaseConnection = $this->getDatabaseConnection();
 
-        $getUserByTokenQuery = $databaseConnection->prepare("SELECT * FROM users WHERE token = :token");
+        $getUserByTokenQuery = $databaseConnection->prepare("SELECT * FROM users WHERE authentication_token = :authentication_token");
 
         $success = $getUserByTokenQuery->execute([
-            "token" => $token
+            "authentication_token" => $token
         ]);
 
         if (!$success) {
@@ -102,13 +103,51 @@ final class UserRepository extends Repository
         return $user;
     }
 
-    final public function removeUserTokenById(string $id): bool
+    final public function removeUserAuthenticationTokenById(string $id): bool
     {
         $databaseConnection = $this->getDatabaseConnection();
 
-        $removeTokenByIdQuery = $databaseConnection->prepare("UPDATE users SET token = NULL WHERE id = :id");
+        $removeTokenByIdQuery = $databaseConnection->prepare("UPDATE users SET authentication_token = NULL WHERE id = :id");
 
         $success = $removeTokenByIdQuery->execute([
+            "id" => $id
+        ]);
+
+        return $success;
+    }
+
+    final public function getUserByConfirmationToken(string $confirmationToken): User | null
+    {
+        $databaseConnection = $this->getDatabaseConnection();
+
+        $getUserByConfirmationTokenQuery = $databaseConnection->prepare("SELECT * FROM users WHERE confirmation_token = :confirmation_token");
+
+        $success = $getUserByConfirmationTokenQuery->execute([
+            "confirmation_token" => $confirmationToken
+        ]);
+
+        if (!$success) {
+            return null;
+        }
+
+        $getUserByConfirmationTokenQuery->setFetchMode(PDO::FETCH_CLASS, User::class);
+
+        $user = $getUserByConfirmationTokenQuery->fetch();
+
+        if (!$user) {
+            return null;
+        }
+
+        return $user;
+    }
+
+    final public function removeUserConfirmationTokenById(string $id): bool
+    {
+        $databaseConnection = $this->getDatabaseConnection();
+
+        $removeConfirmationTokenByIdQuery = $databaseConnection->prepare("UPDATE users SET confirmation_token = NULL WHERE id = :id");
+
+        $success = $removeConfirmationTokenByIdQuery->execute([
             "id" => $id
         ]);
 
