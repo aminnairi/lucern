@@ -6,12 +6,15 @@ use App\Core\Request;
 use App\Core\Responses\JsonResponse;
 use App\Exceptions\BadRequestException;
 use App\Exceptions\InternalServerErrorException;
+use App\Exceptions\UnauthorizedException;
 use App\Repositories\UserRepository;
 use App\Services\TokenService;
 
 final class LoginController
 {
-    final public function __construct(private Request $request, private JsonResponse $response, private UserRepository $userRepository, private TokenService $tokenService) { }
+    final public function __construct(private Request $request, private JsonResponse $response, private UserRepository $userRepository, private TokenService $tokenService)
+    {
+    }
 
     final public function post(): JsonResponse
     {
@@ -32,9 +35,13 @@ final class LoginController
             throw new BadRequestException("Invalid credentials");
         }
 
+        if (!$user->isConfirmed()) {
+            throw new UnauthorizedException("You must confirm your registration first");
+        }
+
         $token = $this->tokenService->createToken();
 
-        $success = $this->userRepository->setUserTokenById($user->id, $token);
+        $success = $this->userRepository->setUserAuthenticationTokenById($user->id, $token);
 
         if (!$success) {
             throw new InternalServerErrorException("Invalid credentials");
