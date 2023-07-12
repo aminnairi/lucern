@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Repositories\UserRepository;
 use App\Core\Request;
+use App\Models\User;
 
 final class AuthenticationService
 {
@@ -11,7 +12,7 @@ final class AuthenticationService
     {
     }
 
-    final public function authenticated(): bool
+    final public function authenticated(): User
     {
         $authorizationHeader = $this->request->header("Authorization");
 
@@ -42,7 +43,7 @@ final class AuthenticationService
             return false;
         }
 
-        return true;
+        return $user;
     }
 
     final public function token(): string | null
